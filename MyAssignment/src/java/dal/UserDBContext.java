@@ -5,55 +5,60 @@
 package dal;
 
 import java.util.ArrayList;
-import model.auth.Role;
 import model.auth.User;
 import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.auth.Feature;
+import model.auth.Role;
 
 /**
  *
- * @author milo9
+ * @author sonnt-local
  */
 public class UserDBContext extends DBContext<User> {
 
     public ArrayList<Role> getRoles(String username) {
         PreparedStatement stm = null;
-        String sql = "select r.rid,r.rname,f.fid,f.fname,f.[url] from [User] u \n"
-                + "INNER JOIN RoleUser ru on u.username = ru.username \n"
-                + "INNER JOIN [Role] r on ru.rid = r.rid \n"
-                + "INNER JOIN [RoleFeature] rf on r.rid = rf.rid\n"
-                + "INNER JOIN Feature f on rf.fid = f.fid \n"
-                + "\n"
-                + "WHERE u.username = ?";
         ArrayList<Role> roles = new ArrayList<>();
         try {
+            String sql = "SELECT r.rid,r.rname,f.fid,f.fname,f.[url] FROM [Users] u \n"
+                    + "	INNER JOIN UserRole ur ON u.username = ur.username\n"
+                    + "	INNER JOIN [Role] r ON r.rid = ur.rid\n"
+                    + "	INNER JOIN RoleFeature rf ON rf.rid = r.rid\n"
+                    + "	INNER JOIN Feature f ON f.fid = rf.fid\n"
+                    + "WHERE u.username = ? ";
+            
             stm = connection.prepareStatement(sql);
             stm.setString(1, username);
             ResultSet rs = stm.executeQuery();
             Role crole = new Role();
             crole.setId(-1);
-            while (rs.next()) {
+            while(rs.next())
+            {
                 int rid = rs.getInt("rid");
-                if (rid != crole.getId()) {
+                if(rid != crole.getId())
+                {
                     crole = new Role();
                     crole.setId(rid);
                     crole.setName(rs.getString("rname"));
                     roles.add(crole);
                 }
-
+                
                 Feature f = new Feature();
                 f.setId(rs.getInt("fid"));
                 f.setName(rs.getString("fname"));
                 f.setUrl(rs.getString("url"));
-
+                
                 f.setRoles(roles);
                 crole.getFeatures().add(f);
             }
+            
         } catch (SQLException ex) {
             Logger.getLogger(UserDBContext.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
+        }
+        finally
+        {
             try {
                 stm.close();
                 connection.close();
@@ -62,15 +67,13 @@ public class UserDBContext extends DBContext<User> {
             }
         }
         return roles;
-
     }
 
-    
     public User get(String username, String password) {
         User user = null;
         PreparedStatement stm = null;
         try {
-            String sql = "SELECT [username],[password],[displayname] FROM [User]\n"
+            String sql = "SELECT [username],[password],[displayname] FROM [Users]\n"
                     + "WHERE [username] = ? AND [password] = ?";
             stm = connection.prepareStatement(sql);
             stm.setString(1, username);
@@ -94,8 +97,7 @@ public class UserDBContext extends DBContext<User> {
         }
         return user;
     }
-    
-    
+
     @Override
     public void insert(User model) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
@@ -120,6 +122,5 @@ public class UserDBContext extends DBContext<User> {
     public User get(int id) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
-
 
 }

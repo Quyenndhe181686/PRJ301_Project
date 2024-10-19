@@ -16,7 +16,7 @@ import model.auth.User;
 
 /**
  *
- * @author milo9
+ * @author sonnt-local
  */
 public abstract class BaseRBACController extends BaseRequiredAuthenticationController {
     
