@@ -12,8 +12,8 @@ import java.util.ArrayList;
  */
 public class PlanHeader {
     private int id;
-    private ArrayList<PlanDetail> planDetails;
-    private ArrayList<Product> products;
+    private PlanDetail planDetail;
+    private Product product;
     private int quatity;
     private float estimatedEffort;
 
@@ -25,21 +25,23 @@ public class PlanHeader {
         this.id = id;
     }
 
-    public ArrayList<PlanDetail> getPlanDetails() {
-        return planDetails;
+    public PlanDetail getPlanDetail() {
+        return planDetail;
     }
 
-    public void setPlanDetails(ArrayList<PlanDetail> planDetails) {
-        this.planDetails = planDetails;
+    public void setPlanDetail(PlanDetail planDetail) {
+        this.planDetail = planDetail;
     }
 
-    public ArrayList<Product> getProducts() {
-        return products;
+    public Product getProduct() {
+        return product;
     }
 
-    public void setProducts(ArrayList<Product> products) {
-        this.products = products;
+    public void setProduct(Product product) {
+        this.product = product;
     }
+
+
 
     public int getQuatity() {
         return quatity;

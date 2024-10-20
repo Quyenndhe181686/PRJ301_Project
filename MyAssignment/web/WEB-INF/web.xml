@@ -8,6 +8,26 @@
         <servlet-name>LoginController</servlet-name>
         <servlet-class>controller.auth.LoginController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>ProductionPlanCreateController</servlet-name>
+        <servlet-class>controller.plan.ProductionPlanCreateController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>CreateEmployeeController</servlet-name>
+        <servlet-class>controller.employee.CreateEmployeeController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>DeleteEmployeeController</servlet-name>
+        <servlet-class>controller.employee.DeleteEmployeeController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>UpdateEmployeeController</servlet-name>
+        <servlet-class>controller.employee.UpdateEmployeeController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ViewEmployeeController</servlet-name>
+        <servlet-class>controller.employee.ViewEmployeeController</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LogoutController</servlet-name>
         <url-pattern>/logout</url-pattern>
@@ -15,5 +35,25 @@
     <servlet-mapping>
         <servlet-name>LoginController</servlet-name>
         <url-pattern>/login</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProductionPlanCreateController</servlet-name>
+        <url-pattern>/plan/create</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>CreateEmployeeController</servlet-name>
+        <url-pattern>/employee/add</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>DeleteEmployeeController</servlet-name>
+        <url-pattern>/employee/delete</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UpdateEmployeeController</servlet-name>
+        <url-pattern>/employee/update</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ViewEmployeeController</servlet-name>
+        <url-pattern>/employee/view</url-pattern>
     </servlet-mapping>
 </web-app>

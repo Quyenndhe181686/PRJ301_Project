@@ -4,7 +4,8 @@
  */
 package model.resource;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.*;
 
 /**
  *
@@ -15,8 +16,19 @@ public class Plan {
     private String name;
     private Date startDate;
     private Date endDate;
-    private Department detp;
+    private Department dept;
+    private ArrayList<PlanHeader> headers = new ArrayList<>();
 
+    public ArrayList<PlanHeader> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(ArrayList<PlanHeader> headers) {
+        this.headers = headers;
+    }
+
+    
+    
     public int getId() {
         return id;
     }
@@ -49,12 +61,12 @@ public class Plan {
         this.endDate = endDate;
     }
 
-    public Department getDetp() {
-        return detp;
+    public Department getDept() {
+        return dept;
     }
 
-    public void setDetp(Department detp) {
-        this.detp = detp;
+    public void setDept(Department detp) {
+        this.dept = detp;
     }
     
     

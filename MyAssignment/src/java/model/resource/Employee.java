@@ -11,9 +11,10 @@ import java.util.ArrayList;
  * @author milo9
  */
 public class Employee {
+
     private int id;
     private String name;
-    private ArrayList<Department> depts;
+    private Department dept;
     private String phoneNumber;
     private String address;
     private Salary salary;
@@ -34,12 +35,12 @@ public class Employee {
         this.name = name;
     }
 
-    public ArrayList<Department> getDepts() {
-        return depts;
+    public Department getDept() {
+        return dept;
     }
 
-    public void setDepts(ArrayList<Department> depts) {
-        this.depts = depts;
+    public void setDept(Department dept) {
+        this.dept = dept;
     }
 
     public String getPhoneNumber() {
@@ -65,8 +66,5 @@ public class Employee {
     public void setSalary(Salary salary) {
         this.salary = salary;
     }
-    
-    
-    
-    
+
 }
