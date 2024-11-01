@@ -4,20 +4,27 @@
  */
 package model.resource;
 
-import java.util.ArrayList;
-import java.util.Date;
+import java.sql.Date;
 
 /**
  *
  * @author milo9
  */
 public class PlanDetail {
-    
+
     private int id;
-    private PlanDetail planDetail;
-    private ArrayList<Shift> shifts;
+    private PlanHeader planHeader;
+    private Shift shift;
     private Date date;
     private int quantity;
+    private Product product; 
+    public Product getProduct() {
+        return planHeader.getProduct(); // Assuming planHeader has getProduct()
+    }
+
+    public Shift getShift() {
+        return shift;
+    }
 
     public int getId() {
         return id;
@@ -27,22 +34,18 @@ public class PlanDetail {
         this.id = id;
     }
 
-    public PlanDetail getPlanDetail() {
-        return planDetail;
+    public PlanHeader getPlanHeader() {
+        return planHeader;
     }
 
-    public void setPlanDetail(PlanDetail planDetail) {
-        this.planDetail = planDetail;
+    public void setPlanHeader(PlanHeader planHeader) {
+        this.planHeader = planHeader;
     }
 
-    public ArrayList<Shift> getShifts() {
-        return shifts;
-    }
 
-    public void setShifts(ArrayList<Shift> shifts) {
-        this.shifts = shifts;
+    public void setShift(Shift shift) {
+        this.shift = shift;
     }
-
 
     public Date getDate() {
         return date;
@@ -59,7 +62,14 @@ public class PlanDetail {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
     
+    public Product getProductDetail(){
+        return product;
+    }
     
-          
+
 }

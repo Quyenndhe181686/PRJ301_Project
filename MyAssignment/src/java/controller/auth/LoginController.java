@@ -13,40 +13,34 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/**
- *
- * @author sonng
- */
 
 public class LoginController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String param_user = req.getParameter("username");//user input
-        String param_pass = req.getParameter("password");
-        
+        String username = req.getParameter("username");
+        String password = req.getParameter("password");
+
+        if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
+            req.setAttribute("errorMessage", "Vui lòng nhập tên đăng nhập và mật khẩu.");
+            req.getRequestDispatcher("login.html").forward(req, resp);
+            return;
+        }
+
         UserDBContext db = new UserDBContext();
-        model.auth.User account = db.get(param_user, param_pass);
-        
-        
-        if(account != null)
-        {
-            resp.getWriter().println("login successful!");
+        User account = db.get(username, password);
+
+        if (account != null) {
             req.getSession().setAttribute("account", account);
-            resp.sendRedirect("home.jsp");
+            req.getRequestDispatcher("/home").forward(req, resp);
+        } else {
+            req.setAttribute("errorMessage", "Sai tên đăng nhập hoặc mật khẩu!");
+            resp.sendRedirect("home");
         }
-        else
-        {
-            resp.getWriter().println("login failed!");
-        }
-                
-        
-        
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.getRequestDispatcher("login.html").forward(req, resp);
     }
-    
 }

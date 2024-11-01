@@ -5,13 +5,14 @@
 package model.resource;
 
 import java.util.ArrayList;
-import java.util.*;
+import java.sql.*;
 
 /**
  *
  * @author milo9
  */
 public class Plan {
+
     private int id;
     private String name;
     private Date startDate;
@@ -27,8 +28,6 @@ public class Plan {
         this.headers = headers;
     }
 
-    
-    
     public int getId() {
         return id;
     }
@@ -68,7 +67,5 @@ public class Plan {
     public void setDept(Department detp) {
         this.dept = detp;
     }
-    
-    
-       
+
 }

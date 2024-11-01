@@ -32,7 +32,7 @@ public class ProductionPlanCreateController extends BaseRBACController {
 
     @Override
     protected void doAuthorizedPost(HttpServletRequest req, HttpServletResponse resp, User account) throws ServletException, IOException {
-                Plan plan = new Plan();
+        Plan plan = new Plan();
         plan.setName(req.getParameter("name"));
         plan.setStartDate(Date.valueOf(req.getParameter("from")));
         plan.setEndDate(Date.valueOf(req.getParameter("to")));

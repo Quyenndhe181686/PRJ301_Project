@@ -33,33 +33,32 @@ public class ProductDBContext extends DBContext<Product>{
 
     @Override
     public ArrayList<Product> list() {
-        ArrayList<Product> products = new ArrayList<>();
+       ArrayList<Product> products = new ArrayList<>();
         PreparedStatement stm = null;
-        String sql = "select pid,pname,[description] from Products";
-        
+        ResultSet rs = null;
+        String sql = "SELECT pid, pname FROM Products";  // Ví dụ về câu truy vấn
+
         try {
-            stm= connection.prepareStatement(sql);
-            ResultSet rs = stm.executeQuery();
-            while(rs.next()){
+            stm = connection.prepareStatement(sql);
+            rs = stm.executeQuery();
+            
+            while (rs.next()) {
                 Product product = new Product();
                 product.setId(rs.getInt("pid"));
                 product.setName(rs.getString("pname"));
-                product.setDescription(rs.getString("description"));                
                 products.add(product);
             }
-            
         } catch (SQLException ex) {
-            Logger.getLogger(ProductDBContext.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        finally{
+            ex.printStackTrace();
+        } finally {
             try {
-                stm.close();
-                connection.close();
+                if (rs != null) rs.close();
+                if (stm != null) stm.close();  // Kiểm tra stm khác null trước khi đóng
+                if (connection != null) connection.close();
             } catch (SQLException ex) {
-                Logger.getLogger(ProductDBContext.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
             }
         }
-        
         
         return products;
     }

@@ -11,8 +11,9 @@ import java.util.ArrayList;
  * @author milo9
  */
 public class PlanHeader {
+
     private int id;
-    private PlanDetail planDetail;
+    private ArrayList<PlanDetail> planDetails;
     private Product product;
     private int quatity;
     private float estimatedEffort;
@@ -25,12 +26,12 @@ public class PlanHeader {
         this.id = id;
     }
 
-    public PlanDetail getPlanDetail() {
-        return planDetail;
+    public ArrayList<PlanDetail> getPlanDetails() {
+        return planDetails;
     }
 
-    public void setPlanDetail(PlanDetail planDetail) {
-        this.planDetail = planDetail;
+    public void setPlanDetails(ArrayList<PlanDetail> planDetails) {
+        this.planDetails = planDetails;
     }
 
     public Product getProduct() {
@@ -40,8 +41,6 @@ public class PlanHeader {
     public void setProduct(Product product) {
         this.product = product;
     }
-
-
 
     public int getQuatity() {
         return quatity;
@@ -58,7 +57,5 @@ public class PlanHeader {
     public void setEstimatedEffort(float estimatedEffort) {
         this.estimatedEffort = estimatedEffort;
     }
-    
-    
-    
+
 }
