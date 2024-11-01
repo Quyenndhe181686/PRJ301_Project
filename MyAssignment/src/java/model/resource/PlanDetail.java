@@ -17,7 +17,7 @@ public class PlanDetail {
     private Shift shift;
     private Date date;
     private int quantity;
-    private Product product; 
+    
     public Product getProduct() {
         return planHeader.getProduct(); // Assuming planHeader has getProduct()
     }
@@ -63,13 +63,9 @@ public class PlanDetail {
         this.quantity = quantity;
     }
 
-    public void setProduct(Product product) {
-        this.product = product;
-    }
+ 
     
-    public Product getProductDetail(){
-        return product;
-    }
+   
     
 
 }

@@ -53,8 +53,8 @@ public class PlanHeaderDBContext extends DBContext<PlanHeader> {
 
         return effort;
     }
+// Phương thức để lấy PlanHeader dựa vào productId và planId
 
-    // Phương thức để lấy PlanHeader dựa vào productId và planId
     public PlanHeader getPlanHeaderByProductAndPlan(int productId, int planId) {
         PlanHeader planHeader = null;
         String sql = "SELECT phid, pid, plid, quantity, estimatedeffort "

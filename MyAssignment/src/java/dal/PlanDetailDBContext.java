@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 
 import model.resource.PlanDetail;
 import model.resource.PlanHeader;
+import model.resource.Product;
 import model.resource.Shift;
 
 /**
@@ -24,6 +25,7 @@ import model.resource.Shift;
 public class PlanDetailDBContext extends DBContext<PlanDetail> {
 
     public List<PlanDetail> getPlanDetailsByPlanId(int planId) {
+        ProductDBContext db = new ProductDBContext();
         List<PlanDetail> planDetails = new ArrayList<>();
         String sql = "SELECT pd.pdid, pd.phid, pd.sid, pd.date, pd.quantity "
                 + "FROM PlanDetails pd "
@@ -40,6 +42,8 @@ public class PlanDetailDBContext extends DBContext<PlanDetail> {
 
                 PlanHeader planHeader = new PlanHeader();
                 planHeader.setId(rs.getInt("phid"));
+                Product product = db.getProductByPlanHeaderId(rs.getInt("phid"));                
+                planHeader.setProduct(product);
                 planDetail.setPlanHeader(planHeader);
 
                 Shift shift = new Shift();

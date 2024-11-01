@@ -8,6 +8,7 @@ import controller.auth.BaseRBACController;
 import dal.PlanDBContext;
 import dal.PlanDetailDBContext;
 import dal.PlanHeaderDBContext;
+import dal.ShiftDBContext;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -43,63 +44,56 @@ public class UpdatePlanDetailController extends BaseRBACController {
             return;
         }
 
-        // Lấy StartDate và EndDate từ Plan
-        java.util.Date utilStartDate = plan.getStartDate();
-        java.util.Date utilEndDate = plan.getEndDate();
+        // Lấy danh sách sản phẩm theo planId
+        PlanHeaderDBContext planHeaderDB = new PlanHeaderDBContext();
+        List<Product> products = planHeaderDB.getProductsByPlanId(planId);
 
-        // Chuyển đổi sang java.sql.Date
-        Date startDate = new Date(utilStartDate.getTime());
-        Date endDate = new Date(utilEndDate.getTime());
+        // Lấy danh sách chi tiết kế hoạch từ cơ sở dữ liệu
+        PlanDetailDBContext planDetailDB = new PlanDetailDBContext();
+        List<PlanDetail> planDetails = planDetailDB.getPlanDetailsByPlanId(planId);
 
-        // Tính số ngày giữa StartDate và EndDate
-        long diffInMillis = Math.abs(endDate.getTime() - startDate.getTime());
-        int numberOfDays = (int) (diffInMillis / (1000 * 60 * 60 * 24)) + 1;
+        // Tạo danh sách các ngày giữa startDate và endDate
+        Date startDate = plan.getStartDate();
+        Date endDate = plan.getEndDate();
+        List<Date> dateList = getDateList(startDate, endDate);
 
-        // Tạo danh sách các ngày
+        // Tạo bản đồ để lưu trữ số lượng theo sản phẩm, ngày, và ca
+        Map<Integer, Map<Date, Map<Integer, Integer>>> quantityMap = new HashMap<>();
+
+// Lưu trữ số lượng vào quantityMap
+        for (PlanDetail detail : planDetails) {
+            int productId = detail.getPlanHeader().getProduct().getId();
+            Date date = detail.getDate();
+            int shiftId = detail.getShift().getId();
+
+            System.out.println(detail.getQuantity());
+
+            quantityMap
+                    .computeIfAbsent(productId, k -> new HashMap<>())
+                    .computeIfAbsent(date, k -> new HashMap<>())
+                    .put(shiftId, detail.getQuantity());
+        }
+
+        // Truyền các dữ liệu đến JSP
+        req.setAttribute("plan", plan);
+        req.setAttribute("products", products);
+        req.setAttribute("dateList", dateList);
+        req.setAttribute("quantityMap", quantityMap); // Truyền quantityMap vào JSP
+        req.getRequestDispatcher("../view/plandetail/update.jsp").forward(req, resp);
+    }
+
+// Phương thức để tạo danh sách ngày
+    private List<Date> getDateList(Date startDate, Date endDate) {
         List<Date> dateList = new ArrayList<>();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(startDate);
 
-        for (int i = 0; i < numberOfDays; i++) {
-            dateList.add(new Date(calendar.getTimeInMillis())); // Thêm vào danh sách
-            calendar.add(Calendar.DATE, 1); // Thêm 1 ngày
+        while (!calendar.getTime().after(endDate)) {
+            dateList.add(calendar.getTime());
+            calendar.add(Calendar.DATE, 1);
         }
 
-        // Lấy danh sách chi tiết kế hoạch cho planId
-        PlanDetailDBContext planDetailDB = new PlanDetailDBContext();
-        List<PlanDetail> planDetails = planDetailDB.getPlanDetailsByPlanId(planId); // Lấy các chi tiết kế hoạch
-
-        // Lấy danh sách sản phẩm cho planId
-        PlanHeaderDBContext db = new PlanHeaderDBContext();
-        List<Product> products = db.getProductsByPlanId(planId);
-
-        Map<String, Map<Integer, PlanDetail>> planDetailsMap = new HashMap<>();
-
-        for (PlanDetail detail : planDetails) {
-            String dateKey = new SimpleDateFormat("yyyy-MM-dd").format(detail.getDate());
-            
-            int productId = detail.getProductDetail().getId();
-
-            if (!planDetailsMap.containsKey(dateKey)) {
-                planDetailsMap.put(dateKey, new HashMap<>());
-            }
-
-            planDetailsMap.get(dateKey).put(productId, detail);
-        }
-        // Gán các thuộc tính cần thiết vào request
-        req.setAttribute("plan", plan);
-        req.setAttribute("products", products);
-        req.setAttribute("dateList", dateList); // Truyền danh sách ngày vào JSP
-        req.setAttribute("planDetails", planDetailsMap); // Truyền danh sách chi tiết vào JSP
-
-        for (PlanDetail i : planDetails) {
-            resp.getWriter().print(i.getId());
-            resp.getWriter().print(i.getPlanHeader().getId());
-            resp.getWriter().print(i.getShift().getId());
-            resp.getWriter().print(i.getDate());
-            resp.getWriter().println(i.getQuantity());
-        }
-        req.getRequestDispatcher("../view/plandetail/update.jsp").forward(req, resp);
+        return dateList;
     }
 
     @Override
@@ -107,40 +101,49 @@ public class UpdatePlanDetailController extends BaseRBACController {
         PlanDetailDBContext planDetailDB = new PlanDetailDBContext();
         int planId = Integer.parseInt(req.getParameter("planId"));
 
-        // Lấy danh sách các sản phẩm và chi tiết kế hoạch
+        // Lấy kế hoạch để có StartDate và EndDate
+        PlanDBContext planDB = new PlanDBContext();
+        Plan plan = planDB.get(planId);
+
+        if (plan == null) {
+            resp.sendRedirect("error.jsp");
+            return;
+        }
+
+        // Lấy danh sách các sản phẩm
         List<Product> products = new PlanHeaderDBContext().getProductsByPlanId(planId);
-        List<PlanDetail> planDetails = planDetailDB.getPlanDetailsByPlanId(planId); // Lấy các chi tiết kế hoạch
 
-        // Cập nhật từng chi tiết kế hoạch
-        for (PlanDetail detail : planDetails) {
-            for (Product product : products) {
-                // Lấy quantity từ request
-                int shiftId = 1; // K1
-                String quantityParamK1 = "quantity_" + product.getId() + "_K1";
-                String quantityParamK2 = "quantity_" + product.getId() + "_K2";
-                String quantityParamK3 = "quantity_" + product.getId() + "_K3";
+        // Lấy danh sách các ngày
+        List<Date> dateList = getDateList(plan.getStartDate(), plan.getEndDate());
 
-                // Xử lý các shift
-                int quantityK1 = Integer.parseInt(req.getParameter(quantityParamK1));
-                int quantityK2 = Integer.parseInt(req.getParameter(quantityParamK2));
-                int quantityK3 = Integer.parseInt(req.getParameter(quantityParamK3));
+        for (Product product : products) {
+            for (Date date : dateList) {
+                for (int shift = 1; shift <= 3; shift++) {
+                    String quantityParam = "quantity_" + product.getId() + "_K" + shift;
+                    String quantityStr = req.getParameter(quantityParam);
 
-                // Cập nhật quantity cho từng chi tiết
-                if (detail.getShift().getId() == shiftId) {
-                    detail.setQuantity(quantityK1); // K1
-                } else if (detail.getShift().getId() == 2) {
-                    detail.setQuantity(quantityK2); // K2
-                } else if (detail.getShift().getId() == 3) {
-                    detail.setQuantity(quantityK3); // K3
+                    if (quantityStr != null && !quantityStr.isEmpty()) {
+                        int quantity = Integer.parseInt(quantityStr);
+
+                        // Chuyển đổi java.util.Date thành java.sql.Date
+                        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+
+                        // Cập nhật dữ liệu vào DB
+                        PlanDetail planDetail = new PlanDetail();
+                        planDetail.setPlanHeader(new PlanHeaderDBContext().getPlanHeaderByProductAndPlan(product.getId(), planId));
+                        planDetail.setDate(sqlDate);
+                        planDetail.setShift(new ShiftDBContext().get(shift));
+                        planDetail.setQuantity(quantity);
+
+                        // Cập nhật chi tiết kế hoạch
+                        planDetailDB.update(planDetail);
+                    }
                 }
-
-                // Cập nhật vào DB
-                planDetailDB.update(detail);
             }
         }
 
-        // Chuyển hướng đến trang thành công
         resp.sendRedirect("success.jsp");
     }
+
 
 }
