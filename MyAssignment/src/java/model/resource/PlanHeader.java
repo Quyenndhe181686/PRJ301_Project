@@ -15,8 +15,19 @@ public class PlanHeader {
     private int id;
     private ArrayList<PlanDetail> planDetails;
     private Product product;
-    private int quatity;
+    private int quantity;
     private float estimatedEffort;
+
+    public PlanHeader() {
+    }
+
+    public PlanHeader(int id, ArrayList<PlanDetail> planDetails, Product product, int quantity, float estimatedEffort) {
+        this.id = id;
+        this.planDetails = planDetails;
+        this.product = product;
+        this.quantity = quantity;
+        this.estimatedEffort = estimatedEffort;
+    }
 
     public int getId() {
         return id;
@@ -42,12 +53,12 @@ public class PlanHeader {
         this.product = product;
     }
 
-    public int getQuatity() {
-        return quatity;
+    public int getQuantity() {
+        return quantity;
     }
 
-    public void setQuatity(int quatity) {
-        this.quatity = quatity;
+    public void setQuantity(int quatity) {
+        this.quantity = quatity;
     }
 
     public float getEstimatedEffort() {

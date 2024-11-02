@@ -9,9 +9,19 @@ package model.resource;
  * @author milo9
  */
 public class Salary {
-   private int id;
-   private String level;
-   private double salary;
+
+    private int id;
+    private String level;
+    private double salary;
+
+    public Salary() {
+    }
+
+    public Salary(int id, String level, double salary) {
+        this.id = id;
+        this.level = level;
+        this.salary = salary;
+    }
 
     public int getId() {
         return id;
@@ -36,6 +46,5 @@ public class Salary {
     public void setSalary(double salary) {
         this.salary = salary;
     }
-   
-   
+
 }

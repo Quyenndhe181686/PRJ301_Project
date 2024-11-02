@@ -9,9 +9,19 @@ package model.resource;
  * @author milo9
  */
 public class Department {
-    private int id ;
-    private String name; 
+
+    private int id;
+    private String name;
     private String type;
+
+    public Department() {
+    }
+
+    public Department(int id, String name, String type) {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+    }
 
     public int getId() {
         return id;
@@ -36,6 +46,5 @@ public class Department {
     public void setType(String type) {
         this.type = type;
     }
-    
-    
+
 }

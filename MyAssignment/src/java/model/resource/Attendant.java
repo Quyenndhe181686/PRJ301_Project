@@ -9,11 +9,23 @@ package model.resource;
  * @author milo9
  */
 public class Attendant {
+
     private int id;
     private WorkAssignment workAssignment;
     private float actualQuantity;
     private float alpha;
     private String note;
+
+    public Attendant() {
+    }
+
+    public Attendant(int id, WorkAssignment workAssignment, float actualQuantity, float alpha, String note) {
+        this.id = id;
+        this.workAssignment = workAssignment;
+        this.actualQuantity = actualQuantity;
+        this.alpha = alpha;
+        this.note = note;
+    }
 
     public int getId() {
         return id;
@@ -54,8 +66,5 @@ public class Attendant {
     public void setNote(String note) {
         this.note = note;
     }
-    
-    
-    
-    
+
 }

@@ -20,6 +20,17 @@ public class Plan {
     private Department dept;
     private ArrayList<PlanHeader> headers = new ArrayList<>();
 
+    public Plan() {
+    }
+
+    public Plan(int id, String name, Date startDate, Date endDate, Department dept) {
+        this.id = id;
+        this.name = name;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.dept = dept;
+    }
+
     public ArrayList<PlanHeader> getHeaders() {
         return headers;
     }

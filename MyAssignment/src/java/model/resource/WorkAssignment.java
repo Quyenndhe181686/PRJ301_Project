@@ -9,10 +9,21 @@ package model.resource;
  * @author milo9
  */
 public class WorkAssignment {
+
     private int id;
     private PlanDetail planDetail;
     private Employee e;
     private int quatity;
+
+    public WorkAssignment() {
+    }
+
+    public WorkAssignment(int id, PlanDetail planDetail, Employee e, int quatity) {
+        this.id = id;
+        this.planDetail = planDetail;
+        this.e = e;
+        this.quatity = quatity;
+    }
 
     public int getId() {
         return id;
@@ -45,6 +56,5 @@ public class WorkAssignment {
     public void setQuatity(int quatity) {
         this.quatity = quatity;
     }
-    
-    
+
 }

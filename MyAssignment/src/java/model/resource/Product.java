@@ -9,10 +9,17 @@ package model.resource;
  * @author milo9
  */
 public class Product {
-    
+
     private int id;
     private String name;
     private String description;
+
+    public Product(int parseInt) {
+        this.id = parseInt;
+    }
+
+    public Product() {
+    }
 
     public int getId() {
         return id;
@@ -37,6 +44,5 @@ public class Product {
     public void setDescription(String description) {
         this.description = description;
     }
-    
-    
+
 }

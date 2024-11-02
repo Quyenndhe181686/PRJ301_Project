@@ -14,6 +14,37 @@ import java.util.logging.Logger;
 
 public class PlanHeaderDBContext extends DBContext<PlanHeader> {
 
+    public ArrayList<PlanHeader> getHeadersByPlanId(int planId) {
+        ArrayList<PlanHeader> headers = new ArrayList<>();
+        String sql = "SELECT ph.phid, ph.pid, ph.quantity, ph.estimatedeffort "
+                + "FROM PlanHeaders ph "
+                + "WHERE ph.plid = ?";
+
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, planId);
+            ResultSet rs = stm.executeQuery();
+
+            while (rs.next()) {
+                PlanHeader header = new PlanHeader();
+                header.setId(rs.getInt("phid"));
+
+                // Tạo đối tượng Product và thiết lập ID sản phẩm từ bảng Products
+                Product product = new Product();
+                product.setId(rs.getInt("pid"));
+                header.setProduct(product);
+
+                header.setQuantity(rs.getInt("quantity"));
+                header.setEstimatedEffort(rs.getFloat("estimatedeffort"));
+
+                headers.add(header);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(PlanHeaderDBContext.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return headers;
+    }
+
     // Phương thức để lấy số lượng của sản phẩm cho một kế hoạch cụ thể
     public int getQuantityForPlan(int planId, int productId) {
         int quantity = 0;
@@ -77,7 +108,7 @@ public class PlanHeaderDBContext extends DBContext<PlanHeader> {
                 product.setId(rs.getInt("pid"));
                 planHeader.setProduct(product);
 
-                planHeader.setQuatity(rs.getInt("quantity"));
+                planHeader.setQuantity(rs.getInt("quantity"));
                 planHeader.setEstimatedEffort(rs.getFloat("estimatedeffort"));
             }
         } catch (SQLException ex) {

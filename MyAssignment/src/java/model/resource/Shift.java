@@ -12,11 +12,21 @@ import java.sql.*;
  * @author milo9
  */
 public class Shift {
-    
+
     private int id;
     private String name;
     private Date startTime;
     private Date endTime;
+
+    public Shift() {
+    }
+
+    public Shift(int id, String name, Date startTime, Date endTime) {
+        this.id = id;
+        this.name = name;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
 
     public int getId() {
         return id;
@@ -49,6 +59,5 @@ public class Shift {
     public void setEndTime(Date endTime) {
         this.endTime = endTime;
     }
-    
-    
+
 }

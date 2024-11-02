@@ -16,6 +16,7 @@ import model.resource.Plan;
 import model.resource.PlanHeader;
 import model.resource.Product;
 import java.sql.*;
+import java.util.List;
 
 /**
  *
@@ -67,7 +68,7 @@ public class PlanDBContext extends DBContext<Plan> {
                 PreparedStatement stm_insert_header = connection.prepareStatement(sql_insert_header);
                 stm_insert_header.setInt(1, model.getId());
                 stm_insert_header.setInt(2, header.getProduct().getId());
-                stm_insert_header.setInt(3, header.getQuatity());
+                stm_insert_header.setInt(3, header.getQuantity());
                 stm_insert_header.setFloat(4, header.getEstimatedEffort());
                 stm_insert_header.executeUpdate();
             }
@@ -97,93 +98,92 @@ public class PlanDBContext extends DBContext<Plan> {
 
     @Override
     public void update(Plan plan) {
-        PreparedStatement stmPlan = null;
-        PreparedStatement stmUpdateHeader = null;
-        PreparedStatement stmInsertHeader = null;
-
-        String sqlPlan = "UPDATE Plans SET plname = ?, startdate = ?, enddate = ?, did = ? WHERE plid = ?";
+        String sqlUpdatePlan = "UPDATE Plans SET plname = ?, startdate = ?, enddate = ?, did = ? WHERE plid = ?";
         String sqlUpdateHeader = "UPDATE PlanHeaders SET quantity = ?, estimatedeffort = ? WHERE plid = ? AND pid = ?";
         String sqlInsertHeader = "INSERT INTO PlanHeaders (plid, pid, quantity, estimatedeffort) VALUES (?, ?, ?, ?)";
+        String sqlDeleteHeader = "DELETE FROM PlanHeaders WHERE plid = ? AND pid = ?";
 
         try {
+            if (connection == null || connection.isClosed()) {
+                throw new SQLException("Connection is not established.");
+            }
+
             connection.setAutoCommit(false);
 
-            // Cập nhật thông tin kế hoạch
-            stmPlan = connection.prepareStatement(sqlPlan);
-            stmPlan.setString(1, plan.getName());
-            stmPlan.setDate(2, plan.getStartDate());
-            stmPlan.setDate(3, plan.getEndDate());
-            stmPlan.setInt(4, plan.getDept().getId());
-            stmPlan.setInt(5, plan.getId());
-            stmPlan.executeUpdate();
+            // 1. Cập nhật thông tin của Plan
+            try (PreparedStatement stmUpdatePlan = connection.prepareStatement(sqlUpdatePlan)) {
+                stmUpdatePlan.setString(1, plan.getName());
+                stmUpdatePlan.setDate(2, plan.getStartDate());
+                stmUpdatePlan.setDate(3, plan.getEndDate());
+                stmUpdatePlan.setInt(4, plan.getDept().getId());
+                stmUpdatePlan.setInt(5, plan.getId());
+                stmUpdatePlan.executeUpdate();
+            }
 
-            // Cập nhật hoặc thêm mới các header
+            // 2. Cập nhật, chèn mới hoặc xóa PlanHeader
             for (PlanHeader header : plan.getHeaders()) {
-                // Kiểm tra nếu header đã tồn tại
-                stmUpdateHeader = connection.prepareStatement(sqlUpdateHeader);
-                stmUpdateHeader.setInt(1, header.getQuatity());
-                stmUpdateHeader.setFloat(2, header.getEstimatedEffort());
-                stmUpdateHeader.setInt(3, plan.getId());
-                stmUpdateHeader.setInt(4, header.getProduct().getId());
+                if (header.getQuantity() == 0
+                        || header.getEstimatedEffort() == 0.0f) {
+                    // Nếu quantity hoặc estimatedEffort là null hoặc bằng 0, thì xóa PlanHeader
+                    deletePlanHeader(plan.getId(), header.getProduct().getId());
+                } else {
+                    boolean isUpdated = false;
 
-                int rowsAffected = stmUpdateHeader.executeUpdate();
+                    // Cố gắng cập nhật PlanHeader nếu đã tồn tại
+                    try (PreparedStatement stmUpdateHeader = connection.prepareStatement(sqlUpdateHeader)) {
+                        stmUpdateHeader.setInt(1, header.getQuantity());
+                        stmUpdateHeader.setFloat(2, header.getEstimatedEffort());
+                        stmUpdateHeader.setInt(3, plan.getId());
+                        stmUpdateHeader.setInt(4, header.getProduct().getId());
 
-                // Nếu header chưa tồn tại, chèn mới
-                if (rowsAffected == 0) {
-                    stmInsertHeader = connection.prepareStatement(sqlInsertHeader);
-                    stmInsertHeader.setInt(1, plan.getId());
-                    stmInsertHeader.setInt(2, header.getProduct().getId());
-                    stmInsertHeader.setInt(3, header.getQuatity());
-                    stmInsertHeader.setFloat(4, header.getEstimatedEffort());
-                    stmInsertHeader.executeUpdate();
+                        int rowsAffected = stmUpdateHeader.executeUpdate();
+                        if (rowsAffected > 0) {
+                            isUpdated = true;
+                        }
+                    }
+
+                    // Nếu không tồn tại, chèn mới PlanHeader
+                    if (!isUpdated) {
+                        try (PreparedStatement stmInsertHeader = connection.prepareStatement(sqlInsertHeader)) {
+                            stmInsertHeader.setInt(1, plan.getId());
+                            stmInsertHeader.setInt(2, header.getProduct().getId());
+                            stmInsertHeader.setInt(3, header.getQuantity());
+                            stmInsertHeader.setFloat(4, header.getEstimatedEffort());
+                            stmInsertHeader.executeUpdate();
+                        }
+                    }
                 }
             }
 
-            // Commit transaction
             connection.commit();
-
         } catch (SQLException ex) {
-            // Rollback if there is an error
-            try {
-                connection.rollback();
-            } catch (SQLException rollbackEx) {
-                Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, "Rollback failed", rollbackEx);
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
-            Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, null, ex);
-
+            ex.printStackTrace();
         } finally {
-            // Reset auto-commit and close resources
             try {
-                if (connection != null && !connection.isClosed()) {
+                if (connection != null) {
                     connection.setAutoCommit(true);
                 }
-            } catch (SQLException autoCommitEx) {
-                Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, "Failed to reset auto-commit", autoCommitEx);
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
+        }
+    }
 
-            // Close PreparedStatement objects
-            try {
-                if (stmPlan != null) {
-                    stmPlan.close();
-                }
-                if (stmUpdateHeader != null) {
-                    stmUpdateHeader.close();
-                }
-                if (stmInsertHeader != null) {
-                    stmInsertHeader.close();
-                }
-            } catch (SQLException closeEx) {
-                Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, "Failed to close PreparedStatements", closeEx);
-            }
-
-            // Close connection
-            try {
-                if (connection != null && !connection.isClosed()) {
-                    connection.close();
-                }
-            } catch (SQLException closeEx) {
-                Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, "Failed to close connection", closeEx);
-            }
+    private void deletePlanHeader(int planId, int productId) {
+        String sqlDeleteHeader = "DELETE FROM PlanHeaders WHERE plid = ? AND pid = ?";
+        try (PreparedStatement stmDeleteHeader = connection.prepareStatement(sqlDeleteHeader)) {
+            stmDeleteHeader.setInt(1, planId);
+            stmDeleteHeader.setInt(2, productId);
+            stmDeleteHeader.executeUpdate();
+        } catch (SQLException ex) {
+            Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -194,7 +194,34 @@ public class PlanDBContext extends DBContext<Plan> {
 
     @Override
     public ArrayList<Plan> list() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        ArrayList<Plan> plans = new ArrayList<>();
+        PreparedStatement stm = null;
+        ResultSet rs = null;
+        String sql = "SELECT plid, plname AS name, startdate, enddate, did FROM Plans";  // Sửa để sử dụng tên cột đúng
+
+        try {
+            stm = connection.prepareStatement(sql);
+            rs = stm.executeQuery();
+
+            while (rs.next()) {
+                Plan plan = new Plan();
+                plan.setId(rs.getInt("plid"));
+                plan.setName(rs.getString("name"));  // Đảm bảo tên cột khớp với bảng
+                plan.setStartDate(rs.getDate("startdate"));
+                plan.setEndDate(rs.getDate("enddate"));
+                // Lấy department và set cho kế hoạch
+                Department d = new Department();
+                d.setId(rs.getInt("did"));
+                plan.setDept(d);
+                plans.add(plan);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+
+        }
+
+        return plans;
     }
 
     @Override
@@ -235,7 +262,7 @@ public class PlanDBContext extends DBContext<Plan> {
                     product.setId(rs_headers.getInt("pid"));
                     header.setProduct(product);
 
-                    header.setQuatity(rs_headers.getInt("quantity"));
+                    header.setQuantity(rs_headers.getInt("quantity"));
                     header.setEstimatedEffort(rs_headers.getFloat("estimatedeffort"));
 
                     headers.add(header);
@@ -260,6 +287,45 @@ public class PlanDBContext extends DBContext<Plan> {
             }
         }
         return plan;
+    }
+
+    private ArrayList<PlanHeader> getHeadersByPlanId(int id) {
+        ArrayList<PlanHeader> headers = new ArrayList<>();
+        String sql = "SELECT ph.phid, ph.pid, ph.quantity, ph.estimatedeffort "
+                + "FROM PlanHeaders ph "
+                + "WHERE ph.plid = ?";
+
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, id);
+            ResultSet rs = stm.executeQuery();
+
+            while (rs.next()) {
+                PlanHeader header = new PlanHeader();
+                header.setId(rs.getInt("phid"));
+
+                // Tạo đối tượng Product từ ProductDBContext
+                Product product = new Product();
+                product.setId(rs.getInt("pid"));
+                header.setProduct(product); // Gán Product vào PlanHeader
+
+                header.setQuantity(rs.getInt("quantity"));
+                header.setEstimatedEffort(rs.getFloat("estimatedeffort"));
+
+                headers.add(header);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                if (connection != null && !connection.isClosed()) {
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(PlanDBContext.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return headers;
     }
 
 }

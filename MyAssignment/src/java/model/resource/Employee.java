@@ -19,6 +19,18 @@ public class Employee {
     private String address;
     private Salary salary;
 
+    public Employee() {
+    }
+
+    public Employee(int id, String name, Department dept, String phoneNumber, String address, Salary salary) {
+        this.id = id;
+        this.name = name;
+        this.dept = dept;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+        this.salary = salary;
+    }
+
     public int getId() {
         return id;
     }

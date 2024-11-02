@@ -24,6 +24,49 @@ import model.resource.Shift;
  */
 public class PlanDetailDBContext extends DBContext<PlanDetail> {
 
+    public void updatePlanDetails(ArrayList<PlanDetail> planDetails) {
+        String sqlUpdate = "UPDATE PlanDetails SET quantity = ? WHERE phid = ? AND sid = ? AND date = ?";
+        String sqlInsert = "INSERT INTO PlanDetails (phid, sid, date, quantity) VALUES (?, ?, ?, ?)";
+
+        try {
+            connection.setAutoCommit(false);
+            PreparedStatement stmUpdate = connection.prepareStatement(sqlUpdate);
+            PreparedStatement stmInsert = connection.prepareStatement(sqlInsert);
+
+            for (PlanDetail detail : planDetails) {
+                stmUpdate.setInt(1, detail.getQuantity());
+                stmUpdate.setInt(2, detail.getPlanHeader().getId());
+                stmUpdate.setInt(3, detail.getShift().getId());
+                stmUpdate.setDate(4, new java.sql.Date(detail.getDate().getTime()));
+
+                int rowsAffected = stmUpdate.executeUpdate();
+                if (rowsAffected == 0) { // If no rows updated, insert new row
+                    stmInsert.setInt(1, detail.getPlanHeader().getId());
+                    stmInsert.setInt(2, detail.getShift().getId());
+                    stmInsert.setDate(3, new java.sql.Date(detail.getDate().getTime()));
+                    stmInsert.setInt(4, detail.getQuantity());
+                    stmInsert.executeUpdate();
+                }
+            }
+
+            connection.commit();
+        } catch (SQLException ex) {
+            try {
+                connection.rollback();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            ex.printStackTrace();
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public List<PlanDetail> getPlanDetailsByPlanId(int planId) {
         ProductDBContext db = new ProductDBContext();
         List<PlanDetail> planDetails = new ArrayList<>();
@@ -42,7 +85,7 @@ public class PlanDetailDBContext extends DBContext<PlanDetail> {
 
                 PlanHeader planHeader = new PlanHeader();
                 planHeader.setId(rs.getInt("phid"));
-                Product product = db.getProductByPlanHeaderId(rs.getInt("phid"));                
+                Product product = db.getProductByPlanHeaderId(rs.getInt("phid"));
                 planHeader.setProduct(product);
                 planDetail.setPlanHeader(planHeader);
 
@@ -98,6 +141,21 @@ public class PlanDetailDBContext extends DBContext<PlanDetail> {
             } catch (SQLException ex) {
                 Logger.getLogger(PlanDetailDBContext.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+    }
+
+    public void updatePlanDetail(int phId, java.sql.Date date, int shiftId, int quantity) {
+        String sql = "UPDATE PlanDetails SET quantity = ? WHERE phid = ? AND date = ? AND sid = ?";
+
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, quantity);
+            stm.setInt(2, phId);
+            stm.setDate(3, date);
+            stm.setInt(4, shiftId);
+
+            stm.executeUpdate();
+        } catch (SQLException ex) {
+            Logger.getLogger(PlanDetailDBContext.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

@@ -33,8 +33,8 @@
         <servlet-class>controller.planDetails.CreatePlanDetailController</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>UpdatePlanCreateController</servlet-name>
-        <servlet-class>controller.plan.UpdatePlanCreateController</servlet-class>
+        <servlet-name>UpdatePlanController</servlet-name>
+        <servlet-class>controller.plan.UpdatePlanController</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>UpdatePlanDetailController</servlet-name>
@@ -43,6 +43,10 @@
     <servlet>
         <servlet-name>ViewPlanDetailsController</servlet-name>
         <servlet-class>controller.planDetails.ViewPlanDetailsController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ViewPlanController</servlet-name>
+        <servlet-class>controller.plan.ViewPlanController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LogoutController</servlet-name>
@@ -77,7 +81,7 @@
         <url-pattern>/plandetails/create</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>UpdatePlanCreateController</servlet-name>
+        <servlet-name>UpdatePlanController</servlet-name>
         <url-pattern>/plan/update</url-pattern>
     </servlet-mapping>
     <servlet>
@@ -95,5 +99,9 @@
     <servlet-mapping>
         <servlet-name>ViewPlanDetailsController</servlet-name>
         <url-pattern>/plandetails/view</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ViewPlanController</servlet-name>
+        <url-pattern>/plan/view</url-pattern>
     </servlet-mapping>
 </web-app>

@@ -17,7 +17,18 @@ public class PlanDetail {
     private Shift shift;
     private Date date;
     private int quantity;
-    
+
+    public PlanDetail() {
+    }
+
+    public PlanDetail(int id, PlanHeader planHeader, Shift shift, Date date, int quantity) {
+        this.id = id;
+        this.planHeader = planHeader;
+        this.shift = shift;
+        this.date = date;
+        this.quantity = quantity;
+    }
+
     public Product getProduct() {
         return planHeader.getProduct(); // Assuming planHeader has getProduct()
     }
@@ -42,7 +53,6 @@ public class PlanDetail {
         this.planHeader = planHeader;
     }
 
-
     public void setShift(Shift shift) {
         this.shift = shift;
     }
@@ -62,10 +72,5 @@ public class PlanDetail {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
-
- 
-    
-   
-    
 
 }
