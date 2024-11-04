@@ -5,6 +5,7 @@
 
 package controller.auth;
 
+import dal.ProductDBContext;
 import model.auth.User;
 import model.auth.Feature;
 import jakarta.servlet.ServletException;
@@ -14,7 +15,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import model.resource.Product;
 
 public class HomeController extends HttpServlet {
 
@@ -38,13 +41,17 @@ public class HomeController extends HttpServlet {
             return;
         }
 
-        // Tạo danh sách các feature từ các role của user
-        Set<Feature> features = new HashSet<>(); // Dùng Set để tránh trùng lặp
-        user.getRoles().forEach(role -> features.addAll(role.getFeatures()));
+        
+        // Lấy danh sách sản phẩm từ cơ sở dữ liệu
+        ProductDBContext productDB = new ProductDBContext();
+        List<Product> products = productDB.list(); // Giả sử có phương thức list() để lấy tất cả sản phẩm
 
-        // Đưa danh sách features vào request để hiển thị trong home.jsp
-        req.setAttribute("features", new ArrayList<>(features));
+        // Đưa danh sách sản phẩm vào request
+        req.setAttribute("products", products);
         req.setAttribute("userName", user.getDisplayName());
+
+        // Chuyển tiếp tới trang home.jsp
+        req.getRequestDispatcher("home.jsp").forward(req, resp);
 
         // Chuyển tiếp tới trang home.jsp
         req.getRequestDispatcher("home.jsp").forward(req, resp);
