@@ -1,59 +1,57 @@
-<%-- 
-    Document   : list
-    Created on : Oct 20, 2024, 11:29:18 PM
-    Author     : milo9
---%>
-
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
-    </head>
-    <body>
-        <table border="1px">
-            <tr>
-                <td>Id</td>
-                <td>Name</td>
-                <td>Department</td>
-                <td>Phone Number</td>
-                <td>Address</td>
-                <td>Salary</td>
-                <td> </td>
-            </tr>
-            <c:forEach items="${requestScope.list}" var="l">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Employee List</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../view/style/list1.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Employee List</h1>
+        <table class="table table-bordered">
+            <thead>
                 <tr>
-                    <td>${l.id}</td>
-                    <td>${l.name}</td>
-                    <td>${l.dept.id}</td>
-                    <td>${l.phoneNumber}</td>
-                    <td>${l.address}</td>
-                    <td>${l.salary.id}</td>
-                    <td>
-                    <a href="update?id=${l.id}">Edit</a>
-                    <input type="button" value="Remove" onclick="removeEmployee(${l.id})"/>
-                    <form id="formRemove${l.id}" action="delete" method="POST"> 
-                        <input type="hidden" name="id" value="${l.id}"/>
-                    </form>
-                </td>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Phone Number</th>
+                    <th>Address</th>
+                    <th>Salary</th>
+                    <th>Actions</th>
                 </tr>
-                
-            </c:forEach>
-            
+            </thead>
+            <tbody>
+                <c:forEach items="${requestScope.list}" var="l">
+                    <tr>
+                        <td>${l.id}</td>
+                        <td>${l.name}</td>
+                        <td>${l.dept.id}</td>
+                        <td>${l.phoneNumber}</td>
+                        <td>${l.address}</td>
+                        <td>${l.salary.id}</td>
+                        <td>
+                            <a href="update?id=${l.id}" class="btn btn-warning">Edit</a>
+                            <input type="button" value="Remove" class="btn btn-danger" onclick="removeEmployee(${l.id})"/>
+                            <form id="formRemove${l.id}" action="delete" method="POST" style="display: none;"> 
+                                <input type="hidden" name="id" value="${l.id}"/>
+                            </form>
+                        </td>
+                    </tr>
+                </c:forEach>
+            </tbody>
         </table>
-                
-        
-        <script>
-            function removeEmployee(id)
-            {
-                var result = confirm("are you sure?");
-                if(result)
-                {
-                    document.getElementById("formRemove" + id).submit();
-                }
+    </div>
+
+    <script>
+        function removeEmployee(id) {
+            var result = confirm("Are you sure you want to remove this employee?");
+            if (result) {
+                document.getElementById("formRemove" + id).submit();
             }
-        </script>
-    </body>
+        }
+    </script>
+</body>
 </html>

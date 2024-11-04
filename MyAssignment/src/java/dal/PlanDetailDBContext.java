@@ -24,6 +24,67 @@ import model.resource.Shift;
  */
 public class PlanDetailDBContext extends DBContext<PlanDetail> {
 
+    public List<PlanDetail> getDetailsByPlanId(int planId) {
+        List<PlanDetail> details = new ArrayList<>();
+        String sql = "SELECT pd.date, pd.quantity, pd.sid, pd.phid, ph.pid, ph.plid, ph.quantity as ph_quantity, ph.estimatedeffort, p.pname "
+                + "FROM PlanDetails pd "
+                + "JOIN PlanHeaders ph ON pd.phid = ph.phid "
+                + "JOIN Products p ON ph.pid = p.pid "
+                + "WHERE ph.plid = ?";
+        PreparedStatement stm = null;
+        ResultSet rs = null;
+
+        try {
+            stm = connection.prepareStatement(sql);
+            stm.setInt(1, planId);
+            rs = stm.executeQuery();
+
+            while (rs.next()) {
+                // Tạo đối tượng PlanDetail
+                PlanDetail planDetail = new PlanDetail();
+                planDetail.setDate(rs.getDate("date"));
+                planDetail.setQuantity(rs.getInt("quantity"));
+
+                // Tạo và thiết lập đối tượng Shift
+                Shift shift = new Shift();
+                shift.setId(rs.getInt("sid"));
+                planDetail.setShift(shift);
+
+                // Tạo và thiết lập đối tượng PlanHeader
+                PlanHeader planHeader = new PlanHeader();
+                planHeader.setId(rs.getInt("phid"));
+                planHeader.setQuantity(rs.getInt("ph_quantity"));
+                planHeader.setEstimatedEffort(rs.getFloat("estimatedeffort"));
+
+                // Tạo và thiết lập đối tượng Product
+                Product product = new Product();
+                product.setId(rs.getInt("pid"));
+                product.setName(rs.getString("pname"));
+                planHeader.setProduct(product);
+
+                planDetail.setPlanHeader(planHeader);
+
+                // Thêm PlanDetail vào danh sách
+                details.add(planDetail);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (stm != null) {
+                    stm.close();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        return details;
+    }
+
     public void updatePlanDetails(ArrayList<PlanDetail> planDetails) {
         String sqlUpdate = "UPDATE PlanDetails SET quantity = ? WHERE phid = ? AND sid = ? AND date = ?";
         String sqlInsert = "INSERT INTO PlanDetails (phid, sid, date, quantity) VALUES (?, ?, ?, ?)";
@@ -316,6 +377,125 @@ public class PlanDetailDBContext extends DBContext<PlanDetail> {
         }
 
         return pd;
+    }
+
+    public void insertOrUpdatePlanDetails(List<PlanDetail> planDetails) {
+        PreparedStatement checkStmt = null;
+        PreparedStatement updateStmt = null;
+        PreparedStatement insertStmt = null;
+
+        try {
+            connection.setAutoCommit(false); // Bắt đầu transaction
+
+            // Câu lệnh kiểm tra xem `PlanDetail` có tồn tại không
+            String checkSql = "SELECT COUNT(*) FROM PlanDetails WHERE phid = ? AND sid = ? AND date = ?";
+            checkStmt = connection.prepareStatement(checkSql);
+
+            // Câu lệnh `UPDATE`
+            String updateSql = "UPDATE PlanDetails SET quantity = ? WHERE phid = ? AND sid = ? AND date = ?";
+            updateStmt = connection.prepareStatement(updateSql);
+
+            // Câu lệnh `INSERT`
+            String insertSql = "INSERT INTO PlanDetails (phid, sid, date, quantity) VALUES (?, ?, ?, ?)";
+            insertStmt = connection.prepareStatement(insertSql);
+
+            for (PlanDetail detail : planDetails) {
+                // Thiết lập tham số cho câu lệnh kiểm tra
+                checkStmt.setInt(1, detail.getPlanHeader().getId());
+                checkStmt.setInt(2, detail.getShift().getId());
+                checkStmt.setDate(3, detail.getDate());
+                ResultSet rs = checkStmt.executeQuery();
+
+                if (rs.next() && rs.getInt(1) > 0) {
+                    // Nếu tồn tại, thực hiện `UPDATE`
+                    updateStmt.setInt(1, detail.getQuantity());
+                    updateStmt.setInt(2, detail.getPlanHeader().getId());
+                    updateStmt.setInt(3, detail.getShift().getId());
+                    updateStmt.setDate(4, detail.getDate());
+                    updateStmt.addBatch();
+                } else {
+                    // Nếu không tồn tại, thực hiện `INSERT`
+                    insertStmt.setInt(1, detail.getPlanHeader().getId());
+                    insertStmt.setInt(2, detail.getShift().getId());
+                    insertStmt.setDate(3, detail.getDate());
+                    insertStmt.setInt(4, detail.getQuantity());
+                    insertStmt.addBatch();
+                }
+            }
+
+            // Thực hiện batch `UPDATE` và `INSERT`
+            updateStmt.executeBatch();
+            insertStmt.executeBatch();
+
+            // Commit transaction
+            connection.commit();
+
+        } catch (SQLException ex) {
+            try {
+                if (connection != null) {
+                    connection.rollback(); // Rollback nếu có lỗi xảy ra
+                }
+            } catch (SQLException rollbackEx) {
+                rollbackEx.printStackTrace();
+            }
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (checkStmt != null) {
+                    checkStmt.close();
+                }
+                if (updateStmt != null) {
+                    updateStmt.close();
+                }
+                if (insertStmt != null) {
+                    insertStmt.close();
+                }
+            } catch (SQLException closeEx) {
+                closeEx.printStackTrace();
+            }
+        }
+    }
+
+    public void deleteDetails(List<PlanDetail> detailsToDelete) {
+        PreparedStatement deleteStmt = null;
+
+        try {
+            connection.setAutoCommit(false); // Bắt đầu transaction
+
+            // Câu lệnh DELETE SQL
+            String deleteSql = "DELETE FROM PlanDetails WHERE phid = ? AND sid = ? AND date = ?";
+            deleteStmt = connection.prepareStatement(deleteSql);
+
+            // Duyệt qua danh sách các PlanDetail cần xóa
+            for (PlanDetail detail : detailsToDelete) {
+                deleteStmt.setInt(1, detail.getPlanHeader().getId());
+                deleteStmt.setInt(2, detail.getShift().getId());
+                deleteStmt.setDate(3, detail.getDate());
+                deleteStmt.addBatch(); // Thêm vào batch
+            }
+
+            // Thực hiện batch delete
+            deleteStmt.executeBatch();
+            connection.commit(); // Commit transaction
+
+        } catch (SQLException ex) {
+            try {
+                if (connection != null) {
+                    connection.rollback(); // Rollback nếu có lỗi xảy ra
+                }
+            } catch (SQLException rollbackEx) {
+                rollbackEx.printStackTrace();
+            }
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (deleteStmt != null) {
+                    deleteStmt.close();
+                }
+            } catch (SQLException closeEx) {
+                closeEx.printStackTrace();
+            }
+        }
     }
 
 }

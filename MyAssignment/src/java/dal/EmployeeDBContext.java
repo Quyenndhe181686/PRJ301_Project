@@ -158,16 +158,8 @@ public class EmployeeDBContext extends DBContext<Employee> {
             }
         } catch (SQLException ex) {
             Logger.getLogger(EmployeeDBContext.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                stm.close();
-                connection.close();
-            } catch (SQLException ex) {
-                Logger.getLogger(EmployeeDBContext.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
         }
-        
+
         return list;
 
     }
@@ -202,13 +194,6 @@ public class EmployeeDBContext extends DBContext<Employee> {
             }
         } catch (SQLException ex) {
             Logger.getLogger(EmployeeDBContext.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                stm.close();
-                connection.close();
-            } catch (SQLException ex) {
-                Logger.getLogger(EmployeeDBContext.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
 
         return null;

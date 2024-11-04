@@ -110,7 +110,14 @@ public class PlanHeaderDBContext extends DBContext<PlanHeader> {
 
                 planHeader.setQuantity(rs.getInt("quantity"));
                 planHeader.setEstimatedEffort(rs.getFloat("estimatedeffort"));
+
+                // Kiểm tra xem dữ liệu đã lấy ra có đúng không
+                System.out.println("PlanHeader ID: " + planHeader.getId());
+                System.out.println("Product ID: " + planHeader.getProduct().getId());
+                System.out.println("Quantity: " + planHeader.getQuantity());
+                System.out.println("Estimated Effort: " + planHeader.getEstimatedEffort());
             }
+
         } catch (SQLException ex) {
             Logger.getLogger(PlanHeaderDBContext.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -121,9 +128,7 @@ public class PlanHeaderDBContext extends DBContext<PlanHeader> {
                 if (stm != null) {
                     stm.close();
                 }
-                if (connection != null) {
-                    connection.close();
-                }
+                // Đừng đóng connection ở đây nếu bạn đang quản lý connection bên ngoài
             } catch (SQLException ex) {
                 Logger.getLogger(PlanHeaderDBContext.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -132,8 +137,8 @@ public class PlanHeaderDBContext extends DBContext<PlanHeader> {
         return planHeader;
     }
 
-    public List<Product> getProductsByPlanId(int planId) {
-        List<Product> products = new ArrayList<>();
+    public ArrayList<Product> getProductsByPlanId(int planId) {
+        ArrayList<Product> products = new ArrayList<>();
         String sql = "SELECT p.pid, p.pname, p.description FROM PlanHeaders ph "
                 + "JOIN Products p ON ph.pid = p.pid "
                 + "WHERE ph.plid = ?";

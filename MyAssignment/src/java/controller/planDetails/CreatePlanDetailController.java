@@ -1,49 +1,80 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller.planDetails;
 
 import controller.auth.BaseRBACController;
 import dal.PlanDBContext;
 import dal.PlanDetailDBContext;
 import dal.PlanHeaderDBContext;
-import dal.ShiftDBContext;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.sql.Date;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-
-import java.util.List;
+import jakarta.servlet.http.HttpSession;
+import java.util.HashMap;
+import java.util.Map;
 import model.auth.User;
 import model.resource.Plan;
 import model.resource.PlanDetail;
 import model.resource.Product;
-import java.sql.*;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import model.resource.Shift;
 
-/**
- *
- * @author milo9
- */
 public class CreatePlanDetailController extends BaseRBACController {
 
     @Override
-    protected void doAuthorizedPost(HttpServletRequest req, HttpServletResponse resp, User account) throws ServletException, IOException {
+    protected void doAuthorizedGet(HttpServletRequest req, HttpServletResponse resp, User account) throws ServletException, IOException {
+        int planId = Integer.parseInt(req.getParameter("planId"));
         PlanDBContext planDB = new PlanDBContext();
-        String planIdParam = req.getParameter("planId");
+        Plan plan = planDB.get(planId);
 
-        // Kiểm tra xem planId có hợp lệ không
-        if (planIdParam == null || planIdParam.isEmpty()) {
-            resp.sendRedirect("error.jsp"); // Chuyển hướng đến trang lỗi
+        if (plan == null) {
+            resp.sendRedirect("error.jsp");
             return;
         }
 
-        int planId = Integer.parseInt(planIdParam);
+        // Lấy danh sách các ngày từ startDate đến endDate của kế hoạch
+        List<Date> dateList = new ArrayList<>();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(plan.getStartDate());
+
+        while (!calendar.getTime().after(plan.getEndDate())) {
+            dateList.add(new Date(calendar.getTimeInMillis()));
+            calendar.add(Calendar.DATE, 1);
+        }
+
+        PlanHeaderDBContext planHeaderDB = new PlanHeaderDBContext();
+        List<Product> products = planHeaderDB.getProductsByPlanId(planId);
+
+        // Lấy các `PlanDetail` nếu đã tồn tại
+        PlanDetailDBContext planDetailDB = new PlanDetailDBContext();
+        List<PlanDetail> existingDetails = planDetailDB.getDetailsByPlanId(planId);
+
+        // Map lưu trữ các giá trị `PlanDetail` theo định dạng [date + "_" + productId + "_" + shiftId]
+        Map<String, Integer> detailMap = new HashMap<>();
+        for (PlanDetail detail : existingDetails) {
+            String key = detail.getDate() + "_" + detail.getPlanHeader().getProduct().getId() + "_" + detail.getShift().getId();
+            detailMap.put(key, detail.getQuantity());
+        }
+
+        // Lưu `dateList` vào session để sử dụng trong `POST`
+        HttpSession session = req.getSession();
+        session.setAttribute("dateList", dateList);
+
+        // Truyền dữ liệu vào request để hiển thị trong JSP
+        req.setAttribute("plan", plan);
+        req.setAttribute("products", products);
+        req.setAttribute("detailMap", detailMap);
+
+        req.getRequestDispatcher("../view/plandetail/create.jsp").forward(req, resp);
+
+    }
+
+    @Override
+    protected void doAuthorizedPost(HttpServletRequest req, HttpServletResponse resp, User account) throws ServletException, IOException {
+        int planId = Integer.parseInt(req.getParameter("planId"));
+        PlanDBContext planDB = new PlanDBContext();
         Plan plan = planDB.get(planId);
 
         if (plan == null) {
@@ -52,95 +83,76 @@ public class CreatePlanDetailController extends BaseRBACController {
         }
 
         PlanDetailDBContext planDetailDB = new PlanDetailDBContext();
-        ArrayList<PlanDetail> planDetails = new ArrayList<>();
+        ArrayList<PlanDetail> detailsToInsertOrUpdate = new ArrayList<>();
+        ArrayList<PlanDetail> detailsToDelete = new ArrayList<>();
 
-        // Lấy danh sách sản phẩm
-        List<Product> products = new PlanHeaderDBContext().getProductsByPlanId(planId);
+        // Lấy `dateList` từ session
+        HttpSession session = req.getSession();
+        List<Date> dateList = (List<Date>) session.getAttribute("dateList");
+
+        PlanHeaderDBContext planHeaderDB = new PlanHeaderDBContext();
+        List<Product> products = planHeaderDB.getProductsByPlanId(planId);
+
+        StringBuilder errors = new StringBuilder();
+        boolean hasError = false;
 
         for (Product product : products) {
-            Date currentDate = plan.getStartDate();
-            while (!currentDate.after(plan.getEndDate())) {
+            String productName = product.getName();
+            for (Date date : dateList) {
+                String dateStr = date.toString();
                 for (int shift = 1; shift <= 3; shift++) {
-                    String quantityParam = "quantity_" + product.getId() + "_K" + shift;
-                    String quantityParamValue = req.getParameter(quantityParam);
+                    String paramName = "shift" + shift + "_quantity_" + dateStr + "_" + productName;
+                    String quantityRaw = req.getParameter(paramName);
+                    int quantity = (quantityRaw != null && !quantityRaw.isEmpty()) ? Integer.parseInt(quantityRaw) : 0;
 
-                    // Kiểm tra giá trị tham số quantityParam
-                    if (quantityParamValue == null || quantityParamValue.isEmpty()) {
-                        System.out.println("Quantity for " + quantityParam + " is null or empty. Skipping this entry.");
-                        continue; // Bỏ qua nếu không có giá trị
+                    // Validation
+                    if (quantity < 0) {
+                        errors.append("Số lượng không được âm cho sản phẩm " + productName + " vào ngày " + dateStr + " ca " + shift + ".<br>");
+                        hasError = true;
                     }
 
-                    int quantity;
-                    try {
-                        quantity = Integer.parseInt(quantityParamValue);
-                    } catch (NumberFormatException e) {
-                        System.out.println("Invalid quantity value for " + quantityParam + ": " + quantityParamValue);
-                        continue; // Bỏ qua nếu giá trị không hợp lệ
-                    }
+                    Shift s = new Shift();
+                    s.setId(shift);
 
-                    PlanDetail planDetail = new PlanDetail();
-                    planDetail.setPlanHeader(new PlanHeaderDBContext().getPlanHeaderByProductAndPlan(product.getId(), planId));
-                    planDetail.setDate(currentDate);
-                    planDetail.setShift(new ShiftDBContext().get(shift));
-                    planDetail.setQuantity(quantity);
-                    planDetails.add(planDetail);
+                    PlanDetail detail = new PlanDetail();
+                    detail.setPlanHeader(planHeaderDB.getPlanHeaderByProductAndPlan(product.getId(), planId));
+                    detail.setShift(s);
+                    detail.setDate(date);
+                    detail.setQuantity(quantity);
+
+                    if (quantity > 0) {
+                        detailsToInsertOrUpdate.add(detail);
+                    } else {
+                        detailsToDelete.add(detail);
+                    }
                 }
-                currentDate = new Date(currentDate.getTime() + (1000 * 60 * 60 * 24)); // Move to next day
             }
         }
 
-        if (!planDetails.isEmpty()) {
-            planDetailDB.insertPlanDetails(planDetails);
-        }
-        
-        for(PlanDetail i : planDetails){
-            resp.getWriter().print(i.getId());
-            resp.getWriter().print(i.getPlanHeader().getId());
-            resp.getWriter().print(i.getShift().getId());
-            resp.getWriter().print(i.getDate());
-            resp.getWriter().println(i.getQuantity());
-        }
-//        resp.sendRedirect("success.jsp");
-    }
-
-    @Override
-    protected void doAuthorizedGet(HttpServletRequest req, HttpServletResponse resp, User account) throws ServletException, IOException {
-        PlanDBContext planDB = new PlanDBContext();
-        int planId = Integer.parseInt(req.getParameter("planId"));
-        Plan plan = planDB.get(planId);
-
-        if (plan == null) {
-            resp.sendRedirect("error.jsp");
+        // Nếu có lỗi, thông báo lỗi và quay lại trang
+        if (hasError) {
+            req.setAttribute("errors", errors.toString());
+            req.setAttribute("plan", plan);
+            req.setAttribute("products", products);
+            
+            req.getRequestDispatcher("../view/plandetail/create.jsp").forward(req, resp);
             return;
         }
 
-        // Lấy StartDate và EndDate từ Plan
-        java.util.Date utilStartDate = plan.getStartDate();
-        java.util.Date utilEndDate = plan.getEndDate();
-
-        // Chuyển đổi sang java.sql.Date
-        Date startDate = new Date(utilStartDate.getTime());
-        Date endDate = new Date(utilEndDate.getTime());
-
-        // Tính số ngày giữa StartDate và EndDate
-        long diffInMillis = Math.abs(endDate.getTime() - startDate.getTime());
-        int numberOfDays = (int) (diffInMillis / (1000 * 60 * 60 * 24)) + 1;
-
-        // Tạo danh sách các ngày
-        List<Date> dateList = new ArrayList<>();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(startDate);
-        for (int i = 0; i < numberOfDays; i++) {
-            dateList.add(new Date(calendar.getTimeInMillis())); // Thêm vào danh sách dưới dạng java.sql.Date
-            calendar.add(Calendar.DATE, 1); // Thêm 1 ngày
+        // Chỉ thực hiện insert hoặc delete nếu không có lỗi
+        if (!detailsToInsertOrUpdate.isEmpty()) {
+            planDetailDB.insertOrUpdatePlanDetails(detailsToInsertOrUpdate);
         }
 
-        PlanHeaderDBContext db = new PlanHeaderDBContext();
-        List<Product> products = db.getProductsByPlanId(planId);
+        if (!detailsToDelete.isEmpty()) {
+            planDetailDB.deleteDetails(detailsToDelete);
+        }
 
-        req.setAttribute("plan", plan);
-        req.setAttribute("products", products);
-        req.setAttribute("dateList", dateList); // Truyền danh sách ngày vào JSP
-        req.getRequestDispatcher("../view/plandetail/create.jsp").forward(req, resp);
+        // Xóa `dateList` khỏi session sau khi sử dụng
+        session.removeAttribute("dateList");
+
+        String notification = "Cập nhật thành công!";
+        resp.sendRedirect("../plandetails/create?planId=" + planId + "&notification=" + notification);
     }
+
 }

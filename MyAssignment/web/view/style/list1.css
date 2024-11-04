@@ -1,0 +1,55 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Nov 4, 2024, 7:47:51 AM
+    Author     : milo9
+*/
+body {
+    background-color: #f8f9fa; /* Màu nền nhẹ */
+}
+
+h1 {
+    color: #4a69bd; /* Màu tiêu đề */
+    text-align: center; /* Căn giữa tiêu đề */
+}
+
+.container {
+    max-width: 1000px; /* Chiều rộng tối đa cho bảng */
+    margin: auto; /* Căn giữa bảng */
+    background-color: white; /* Màu nền của bảng */
+    border-radius: 8px; /* Bo góc */
+    padding: 20px; /* Padding cho bảng */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Đổ bóng */
+}
+
+.table {
+    width: 100%; /* Chiều rộng đầy đủ */
+    border-collapse: collapse; /* Gộp viền */
+}
+
+th, td {
+    text-align: center; /* Căn giữa chữ trong bảng */
+    padding: 10px; /* Padding cho các ô */
+    border: 1px solid #dee2e6; /* Viền cho các ô */
+}
+
+th {
+    background-color: #4a69bd; /* Màu nền cho tiêu đề */
+    color: white; /* Màu chữ cho tiêu đề */
+}
+
+input[type="button"] {
+    background-color: #dc3545; /* Màu nền cho nút Remove */
+    color: white; /* Màu chữ */
+    border: none; /* Không viền */
+    padding: 5px 10px; /* Padding cho nút */
+    border-radius: 4px; /* Bo góc */
+    cursor: pointer; /* Con trỏ chuột khi hover */
+}
+
+input[type="button"]:hover {
+    background-color: #c82333; /* Màu nền khi hover */
+}
+

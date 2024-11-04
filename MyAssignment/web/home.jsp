@@ -15,7 +15,10 @@
             <h1 class="h3">Welcome, ${userName}!</h1>
             <p class="lead">Role-based Access Control System</p>
             <nav class="nav">
-                <a href="home" class="nav-link text-white">Home</a>
+                <a href="../employee/view" class="nav-link text-white">View Employee</a>
+                <a href="../employee/create" class="nav-link text-white">Create Employee</a>
+                <a href="../plan/add" class="nav-link text-white">Plan Create</a>
+                
                 <a href="profile.jsp" class="nav-link text-white">Profile</a>
                 <a href="logout.jsp" class="nav-link text-white">Logout</a>
             </nav>

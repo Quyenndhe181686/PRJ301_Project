@@ -48,6 +48,18 @@
         <servlet-name>ViewPlanController</servlet-name>
         <servlet-class>controller.plan.ViewPlanController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>WorkAssignmentController</servlet-name>
+        <servlet-class>controller.assignment.WorkAssignmentController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>DeleteAssignmentController</servlet-name>
+        <servlet-class>controller.assignment.DeleteAssignmentController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>TakeAttendancesController</servlet-name>
+        <servlet-class>controller.attendance.TakeAttendancesController</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LogoutController</servlet-name>
         <url-pattern>/logout</url-pattern>
@@ -103,5 +115,17 @@
     <servlet-mapping>
         <servlet-name>ViewPlanController</servlet-name>
         <url-pattern>/plan/view</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>WorkAssignmentController</servlet-name>
+        <url-pattern>/work/assign</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>DeleteAssignmentController</servlet-name>
+        <url-pattern>/work/delete</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>TakeAttendancesController</servlet-name>
+        <url-pattern>/attendance/take</url-pattern>
     </servlet-mapping>
 </web-app>
