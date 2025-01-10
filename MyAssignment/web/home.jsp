@@ -19,8 +19,9 @@
                     <a href="profile.jsp" class="nav-link text-white">Profile</a>
                     <a href="logout.jsp" class="nav-link text-white">Logout</a>
                 </nav>
-            </div>
                 <mytag:CustomAttribute value="${date}" />
+            </div>
+                
         </header>
 
 
